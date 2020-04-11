@@ -1,6 +1,8 @@
 'use strict'
 const http = require('http')
 
+// TODO return start time and end time in response
+// NOTE: if you run this in chrome in parallel tabs async won't work like you expect.  It'll queue them up one by one for some reason
 const blockEventLoop = (duration) => {
     const endTime = Date.now() + (duration);
 
@@ -11,6 +13,7 @@ const blockEventLoop = (duration) => {
 
 var syncRequestNum = 0;
 var asyncRequestNum = 0;
+var startTime = new Date();
 
 // reference: https://github.com/workshopper/learnyounode/blob/master/exercises/http_json_api_server/solution/solution.js
 const server = http.createServer(function (req, res) {
@@ -21,8 +24,10 @@ const server = http.createServer(function (req, res) {
         // ""asynchronous"" database query (5 seconds)
         setTimeout(() => {
             console.log('Finished async call ' + asyncRequestNum);
+            var elapsed = new Date() - startTime
             resBody = {
-                async: asyncRequestNum
+                async: asyncRequestNum,
+                finishedAt: elapsed
             }
             asyncRequestNum = asyncRequestNum + 1;
             res.writeHead(200, { 'Content-Type': 'application/json' })
@@ -32,8 +37,10 @@ const server = http.createServer(function (req, res) {
         // "synchronous"" database query (5 seconds)
         blockEventLoop(5000);
         console.log('Finished sync call ' + syncRequestNum);
+        var elapsed = new Date() - startTime
         resBody = {
-            sync: syncRequestNum
+            sync: syncRequestNum,
+            finishedAt: elapsed
         }
         syncRequestNum = syncRequestNum + 1;
         res.writeHead(200, { 'Content-Type': 'application/json' })
